@@ -1,0 +1,37 @@
+{
+  "name": "founder-math",
+  "version": "0.1.0",
+  "description": "Tested, zero-dependency startup finance math: post-money SAFEs, dilution, runway and reverse ARR targets.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "founder-math": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "startup",
+    "safe",
+    "y-combinator",
+    "cap-table",
+    "dilution",
+    "runway",
+    "finance"
+  ],
+  "license": "MIT",
+  "author": "Daniel Nguyen",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
