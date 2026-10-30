@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm test",
     "build:web": "tsc && node -e \"require('fs').cpSync('dist','web/dist',{recursive:true})\"",
-    "web": "npm run build:web && node scripts/serve.mjs"
+    "web": "npm run build:web && node scripts/serve.mjs",
+    "prepare": "tsc"
   },
   "keywords": [
     "startup",
@@ -36,5 +37,10 @@
   "devDependencies": {
     "@types/node": "^24.19.2",
     "typescript": "^5.9.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielhoangnguyen19-png/founder-math.git"
+  },
+  "homepage": "https://danielhoangnguyen19-png.github.io/founder-math/"
 }
