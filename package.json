@@ -15,7 +15,9 @@
     "build": "tsc",
     "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "build:web": "tsc && node -e \"require('fs').cpSync('dist','web/dist',{recursive:true})\"",
+    "web": "npm run build:web && node scripts/serve.mjs"
   },
   "keywords": [
     "startup",
@@ -32,6 +34,7 @@
     "node": ">=22.18"
   },
   "devDependencies": {
+    "@types/node": "^24.19.2",
     "typescript": "^5.9.3"
   }
 }

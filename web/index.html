@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>founder-math</title>
+<meta name="description" content="Post-money SAFE, dilution, runway and reverse-ARR calculators, tested against YC's SAFE User Guide.">
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d1b18; --muted: #6b665e; --line: #e4e0d8;
+    --card: #ffffff; --accent: #c2410c; --good: #15803d; --bad: #b91c1c;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151412; --fg: #ece8e1; --muted: #a39d93; --line: #2d2a26; --card: #1d1b18; --accent: #fb923c; --good: #4ade80; --bad: #f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); line-height: 1.5; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .lede { color: var(--muted); margin: 0 0 24px; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  nav button { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+  nav button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  section[hidden] { display: none; }
+  h2 { font-size: 1.1rem; margin: 0 0 4px; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin: 0 0 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  label { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--muted); gap: 4px; }
+  input { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; }
+  .out { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .stat b { display: block; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 0.85rem; }
+  .good { color: var(--good); } .bad { color: var(--bad); }
+  .row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 8px; }
+  .link { font: inherit; background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; }
+  footer { margin-top: 28px; color: var(--muted); font-size: 0.85rem; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>founder-math</h1>
+  <p class="lede">Startup finance math you can check. The SAFE numbers are tested against every worked example in YC's Post-Money SAFE User Guide.</p>
+
+  <nav role="tablist">
+    <button role="tab" data-tab="safe" aria-selected="true">SAFEs</button>
+    <button role="tab" data-tab="runway">Runway</button>
+    <button role="tab" data-tab="ladder">Reverse ARR</button>
+  </nav>
+
+  <section id="safe">
+    <h2>How much did my SAFEs sell?</h2>
+    <p class="hint">Post-money SAFE ownership = amount ÷ post-money cap. This is the minimum; it rises if your priced round comes in below the caps.</p>
+    <div id="safes"></div>
+    <button class="link" id="add-safe">+ add a SAFE</button>
+    <div class="out">
+      <div class="stat"><b id="safe-total">–</b><span>sold to SAFE investors</span></div>
+      <div class="stat"><b id="safe-keep">–</b><span>kept by everyone else</span></div>
+      <div class="stat"><b id="safe-raised">–</b><span>raised</span></div>
+    </div>
+  </section>
+
+  <section id="runway" hidden>
+    <h2>Am I default alive?</h2>
+    <p class="hint">Assumes expenses stay flat and revenue grows at a steady monthly rate. Paul Graham's question: on current trends, do you reach profitability before the money runs out?</p>
+    <div class="grid">
+      <label>Cash in bank<input data-r="cash" value="400k"></label>
+      <label>Monthly expenses<input data-r="expenses" value="40k"></label>
+      <label>Monthly revenue<input data-r="revenue" value="8k"></label>
+      <label>Revenue growth / month<input data-r="growth" value="10%"></label>
+    </div>
+    <div class="out">
+      <div class="stat"><b id="r-alive">–</b><span>on current trends</span></div>
+      <div class="stat"><b id="r-months">–</b><span>runway</span></div>
+      <div class="stat"><b id="r-profit">–</b><span>month revenue covers costs</span></div>
+    </div>
+  </section>
+
+  <section id="ladder" hidden>
+    <h2>Work backwards from the outcome</h2>
+    <p class="hint">Pick what you want your stake to be worth. See the valuation, ARR and customers that implies. The defaults are an example, not a forecast.</p>
+    <div class="grid">
+      <label>Your stake worth<input data-l="value" value="1b"></label>
+      <label>Your ownership at exit<input data-l="stake" value="20%"></label>
+      <label>Valuation ÷ ARR<input data-l="multiple" value="10"></label>
+      <label>Revenue / customer / year<input data-l="arpu" value="200"></label>
+      <label>Customers today<input data-l="customers" value="50"></label>
+      <label>Months to get there<input data-l="months" value="96"></label>
+    </div>
+    <div class="out">
+      <div class="stat"><b id="l-val">–</b><span>company valuation</span></div>
+      <div class="stat"><b id="l-arr">–</b><span>ARR needed</span></div>
+      <div class="stat"><b id="l-cust">–</b><span>customers needed</span></div>
+      <div class="stat"><b id="l-growth">–</b><span>monthly customer growth</span></div>
+    </div>
+  </section>
+
+  <footer>
+    Educational tool, not legal, tax or investment advice. Numbers accept <code>k</code>, <code>m</code>, <code>b</code> and <code>%</code>.
+    · <a href="https://github.com/danielhoangnguyen19-png/founder-math">Source &amp; tests on GitHub</a> · MIT
+  </footer>
+</main>
+
+<script type="module">
+  import { safeOwnership, totalSafeOwnership, runway, ladder } from "./dist/index.js";
+
+  const parse = (raw) => {
+    const m = /^\$?([\d,.]+)\s*([kmb%]?)$/i.exec(String(raw).trim());
+    if (!m) return NaN;
+    return Number(m[1].replace(/,/g, "")) * { "": 1, k: 1e3, m: 1e6, b: 1e9, "%": 0.01 }[m[2].toLowerCase()];
+  };
+  const usd = (n) => !isFinite(n) ? "–" : "$" + (n >= 1e9 ? (n / 1e9).toFixed(n % 1e9 ? 2 : 0) + "B" : n >= 1e6 ? (n / 1e6).toFixed(n % 1e6 ? 2 : 0) + "M" : Math.round(n).toLocaleString("en-US"));
+  const pct = (n) => isFinite(n) ? (n * 100).toFixed(2) + "%" : "–";
+  const $ = (id) => document.getElementById(id);
+
+  // Tabs
+  document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll("section").forEach((s) => (s.hidden = s.id !== b.dataset.tab));
+  }));
+
+  // SAFEs, prefilled with YC's Appendix II Example 1
+  const safesEl = $("safes");
+  const addSafe = (amount = "", cap = "") => {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `<label>Amount<input class="amt" value="${amount}"></label><label>Post-money cap<input class="cap" value="${cap}"></label><button class="link" aria-label="Remove">remove</button>`;
+    row.querySelector("button").onclick = () => { row.remove(); calcSafe(); };
+    safesEl.append(row);
+  };
+  const calcSafe = () => {
+    const safes = [...safesEl.querySelectorAll(".row")]
+      .map((r) => ({ amount: parse(r.querySelector(".amt").value), cap: parse(r.querySelector(".cap").value) }))
+      .filter((s) => s.amount > 0 && s.cap > 0);
+    const total = totalSafeOwnership(safes);
+    $("safe-total").textContent = pct(total);
+    $("safe-keep").textContent = pct(1 - total);
+    $("safe-keep").className = total >= 1 ? "bad" : "";
+    $("safe-raised").textContent = usd(safes.reduce((n, s) => n + s.amount, 0));
+  };
+  addSafe("200k", "4m"); addSafe("800k", "8m");
+  $("add-safe").onclick = () => { addSafe(); calcSafe(); };
+  safesEl.addEventListener("input", calcSafe);
+
+  const calcRunway = () => {
+    const v = Object.fromEntries([...document.querySelectorAll("[data-r]")].map((i) => [i.dataset.r, parse(i.value)]));
+    const r = runway({ cash: v.cash, monthlyExpenses: v.expenses, monthlyRevenue: v.revenue || 0, revenueGrowth: v.growth || 0 });
+    $("r-alive").textContent = r.defaultAlive ? "Default alive" : "Default dead";
+    $("r-alive").className = r.defaultAlive ? "good" : "bad";
+    $("r-months").textContent = r.monthsOfRunway === Infinity ? "10+ years" : r.monthsOfRunway.toFixed(1) + " months";
+    $("r-profit").textContent = r.profitableMonth === null ? "not before cash runs out" : "month " + r.profitableMonth;
+  };
+  document.querySelectorAll("[data-r]").forEach((i) => i.addEventListener("input", calcRunway));
+
+  const calcLadder = () => {
+    const v = Object.fromEntries([...document.querySelectorAll("[data-l]")].map((i) => [i.dataset.l, parse(i.value)]));
+    const r = ladder({ targetStakeValue: v.value, founderStake: v.stake, arrMultiple: v.multiple, arpu: v.arpu, currentCustomers: v.customers || 0, months: v.months || undefined });
+    $("l-val").textContent = usd(r.valuation);
+    $("l-arr").textContent = usd(r.arr);
+    $("l-cust").textContent = isFinite(r.customers) ? r.customers.toLocaleString("en-US") : "–";
+    $("l-growth").textContent = r.monthlyGrowth === null ? "–" : pct(r.monthlyGrowth);
+  };
+  document.querySelectorAll("[data-l]").forEach((i) => i.addEventListener("input", calcLadder));
+
+  calcSafe(); calcRunway(); calcLadder();
+</script>
+</body>
+</html>
